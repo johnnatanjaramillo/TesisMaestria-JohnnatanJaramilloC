@@ -1,0 +1,196 @@
+%!TEX root = ../thesis.tex
+%*******************************************************************************
+%****************************** Second Chapter *********************************
+%*******************************************************************************
+
+\chapter{Diseño del sistema de detección de fallas}
+
+\ifpdf
+    \graphicspath{{Chapter2/Figs/Raster/}{Chapter2/Figs/PDF/}{Chapter2/Figs/}}
+\else
+    \graphicspath{{Chapter2/Figs/Vector/}{Chapter2/Figs/}}
+\fi
+
+
+%********************************** %First Section  **************************************
+\section{Caracteristicas de los sucesos de eventos} %Section - 2.1 
+\label{section2.1}
+
+Coom se mencionó en el capitulo anterior, los sistemas BPM registran todo evento que es generado por los work items que se estan ejecutando, estos sucesos de evento (Event Logs) corresponden por ejemplo a cuando un work item es creado, o cuando es asignado a un usuario, o cuando llega a un cola, etc. Esto debido a que exite información que podría ser relevante en dichos eventos, generalmente esta información de sucesos de eventos se consolida para obtener indicadores de comportamiento del proceso, por ejemplo cuantos workitems estan activos, el tiempo promedio de ejecución de los workitems, etc. Para nuestro caso de estudio, el sistema WFM registra los sucesos de eventos en una tabla de base de datos relacional, esta tabla generalmente contiene un volumen elevado de registros. Cada suceso de evento almacenado esta relacioando con el id del work item que lo generó, al igual que almacena el tiempo de ocurrencia del work item. Otras cartacteristicas relevantes son por ejemplo el identificador de la operación, o el tipo de evento, o el asunto por el cual fue lanzado en flujo, o el ide del usuario.
+
+Cabe la pena resaltar que manipular estos sucesps de eventos puede llevar a ser un problema de BigData, dado que para procesos de negocio con grandes volumenes de work items activos, el numero de sucesos de eventos podría hacer que su manipulación sea imanejable, eso ya hace que sea necesario abordar estrategias de manipulación de datos de manera destribuida.
+
+Al realizar el analisis de las caracteristicas relevantes de los sucesos de eventos almacenados en la base de datos, se evidencio que todos estas caracteristicas eran categoricas, por lo cual se uso one hot encoding para categorizar o mapear los diferentes sucesos de eventos y relacionarlos con un estado. Con el one hot enconding se obtuvo un numero binario muy grante, el cual se trasnformo a un bigint, y este nuevo bigint.
+
+Que tanto se debe detallar las caracteristicas??
+Figura, donde se muestra como las caracteristicas de los sucesos de eventos con transformadas a un bgint.(donde tengo wobnum, seqnumbre, value)
+
+
+NO olvidar hablar de la cuantización de los sucesos de eventos. Pero no en esta sección
+
+
+%********************************** %Second Section  **************************************
+\section{Secuencias de Sucesos de Eventos } %Section - 2.2 
+\label{section2.2}
+
+Una vez realizada la caracterización de los sucesos de eventos, y teniendo los numeros enteros relacionados con los sucesos de eventos, es necesario generar las secuancias de sucesos de eventos, con estas secuencias se podran identificar patrones en el comportamiento de los work items. Con el uso de Spark esta tarea es sencilla, basicamente se realiza la agrupación de las filas por el id wobnum, y se aplica una función de reducción donde se generar un arreglo de cada bigint ordenados de manera desendente por si tiempo de ocurrencia. Esas secuencias tomaron longitudes de hasta (consultar)
+
+Figura que muestra como se realiza el agrupamiento, y luego se genera la secuancia. 
+
+
+Las secuencias de susceos de eventos se dividen en dos grupos, en un grupo se tienen todas las secuencias que temrinaron en una falla, y en el otro grupo se tienen las secuencias que finalizaron de manera adecuada.
+
+
+
+
+%********************************** %Third Section  **************************************
+\section{Arquitectura de la solución planteada} %Section - 2.3 
+\label{section2.3}
+
+Antes de mostrar la arquitectura donde se impleento la solución se mostrará el los pasos seguidos en el procesamiento de la información, y como son transformados y almacenados (imaghen de los pasos desde la captura de la inforamción, el one hot encoding, y la generación de las secuencias)
+Figura con el flujo.
+
+Alquitectura de Infraestructura del clusters la solución planteada: Información del cluster (un master, cuatro nodos, caracteristicas de cores y ram)
+
+La solución es ejecutada dese el master, se ejecuta un proceso en background por medio deun coando nunh, y se escribe en logs la información de trazabilidad. tabien se asignan los recursos quesean usados por el trabajo lanzado. 
+
+
+Adicional a esto, la estrategia lo que busca es dividir el set de datos y procesarlo en cada nodo, hacer referencia al esquema del poster funcional
+
+
+%********************************** %Quarter Section  **************************************
+\section{Detección de fallas a partir de secuencias de susces de eventos} %Section - 2.4 
+\label{section2.4}
+
+En este trabajo se pretende identificar comportamientos atipicos dentro de las secuencias de eventos registradas por los sismteas BPM haciendo uso de modelos de inteligencia computación como HMM; HSMM, NHSMM y LJTM. A partir de estos comportamientos atipicos es posible anticiparse ante una ocurrencia de una falla en el sistema o incluso en un work item especifico. 
+
+Por tal motivo es necesario obtener un modelo por cada uno de los set de datos a procesar (es decir las secuencias con error y las que no estan asociadas al error). De esta manera se obtendran dos modelos para HMM, dos para HSMM y así sucesivamente. También para cada uno de los modelos planteados se debe estimar los hiperparametros que permitan obtner los mejores resultados. 
+
+
+Luego de tener los modelos, se espera podemos usarlos para evaluar parcialmente las secuencias de los set de datos y detemrinar cual es la lingitud minima que se debe tener para poder realizar una predicción adecuada.
+
+
+
+
+%********************************** %Fifth Section  **************************************
+\section{Modelos usados en el sistema de detección de fallas} %Section - 2.5 
+\label{section2.5}
+
+\section*{HMM (Hidden Markov Model) }
+
+HMM es una extensi\'on de un proceso de Markov discreto. Sin embargo, la principal diferencia entre HMM y los modelos de Markov planos, es que en HMM el estado actual del proceso no puede ser observado, y se denomina un estado oculto [15]
+
+Figura de Hidden Markov Model.
+
+Un HMM b\'asicamente se define como una tupla $\boldsymbol\lambda = (\textbf{A},\textbf{B},\boldsymbol\pi)$, donde:
+
+\begin{itemize}
+
+\item El conjunto de estados ocultos del modelo est\'a dado por: $\textbf{\textit{S}}=\lbrace 1,...,N \rbrace$
+
+\item Una secuencia de estados se denota: $S_{1:T}=(S_{1},...,S_{T})$, donde $S_{t} \in \textbf{S}$ es el estado en el tiempo \textit{t}
+
+\item \textbf{A} corresponde a la matriz de probabilidades de transici\'on entre estados ocultos, y est\'a dada por:
+\begin{equation}
+\textbf{A} = \lbrace a_{ij} \vert a_{ij} = P(S_{t} = j \vert S_{t-1} = i) \rbrace
+\end{equation}
+
+\item $\boldsymbol\pi$ corresponde al vector de probabilidades iniciales del modelo, y est\'a dado por: 
+\begin{equation}
+\boldsymbol\pi = \lbrace \pi_{i} \vert \pi_{i} = P(S_{0} = i) \rbrace
+\end{equation}
+
+\item El conjunto de valores observables es: $\textbf{V} = \lbrace v_{1}, v_{2},...,v_{K} \rbrace$
+
+\item Una secuencia de observaciones es denotada por: $O_{1:T} = (O_{1},O_{2},...,O_{T})$, donde $O_{t} \in \textbf{V}$ es la observaci\'on en el tiempo \textit{t}
+
+\item \textbf{B} corresponde a la matriz de probabilidades de transici\'on entre los estados y las observaciones:
+\begin{equation}
+\textbf{B} = \lbrace b_{j(v_{k})} \vert b_{j(v_{k})} = P(v_{k} \vert S_{t} = j) \rbrace
+\end{equation}
+
+\end{itemize}
+
+
+Por otro lado, se define la variable \textit{forward} como la probabilidad conjunta de $S_{t}=j$ y la secuencia parcial observada $o_{1:t}$
+\begin{equation}
+\alpha_{t}(j) = P(S_{t} = j, o_{1:t} \vert \boldsymbol\lambda)
+\end{equation}
+
+Y la variable \textit{backward} como la probabilidad de la futura observaci\'on dado un estado actual.
+\begin{equation}
+\beta_{t}(j) = P(o_{t+1:T} \vert S_{t} = j, \boldsymbol\lambda)
+\end{equation}
+
+
+\section*{HSMM (Hidden semi-Markov Model) }
+
+HSMM es una extensi\'on de un proceso de semi-Markov. Donde la duraci\'on de los estados denotada por la letra \textit{d}, se define como una variable aleatoria y entera. 
+\\La principal diferencia entre HMM y HSMM, es que en HMM se asume un estado por observaci\'on, mientras que en HSMM cada estado puede emitir una secuencia de observaciones cualquiera [15]
+
+Figura con el HSMM
+
+En HSMM se realizan algunas modificaciones respecto a los par\'ametros definidos para HMM:
+
+\begin{itemize}
+\item La duraci\'on en determinado estado pertenece al conjunto $\textbf{D} = \lbrace 1,2,...,D \rbrace$, donde \textit{D} es la m\'axima duraci\'on en un estado.
+
+\item La matriz \textbf{A} se redefine como: 
+\begin{equation}
+\textbf{A} = \lbrace a_{(i,h)(j,d)} \vert a_{(i,h)(j,d)} = P(S_{[t+1:t+d]} = j \vert S_{[t-h+1:t]} = i) \rbrace
+\end{equation}
+
+\item El vector $\boldsymbol\pi$ se redefine como:
+\begin{equation}
+\boldsymbol\pi = \lbrace \pi_{i,d} \vert \pi_{i,d} = P(S_{[t-d+1:t]} = j) \rbrace ; t \leqslant 0
+\end{equation}
+
+\item La matriz \textbf{B} se redefine como:
+\begin{equation}
+\textbf{B} = \lbrace b_{j,d(o_{t+1:t+d})} \vert b_{j,d(o_{t+1:t+d})} = P(o_{t+1:t+d} \vert S_{[t+1:t+d]} = j) \rbrace
+\end{equation}
+
+\end{itemize}
+
+Las variables \textit{forward} y \textit{backward} tambi\'en presentan modificaciones:
+
+\begin{equation}
+\alpha_{t}(j,d) = P(S_{t-d+1:t} = j, o_{1:t} \vert \boldsymbol\lambda)
+\end{equation}
+
+\begin{equation}
+\beta_{t}(j,d) = P(o_{t+1:T} \vert S_{[t-d+1:t]} = j, \boldsymbol\lambda)
+\end{equation}
+
+
+\section*{NHSMM (Non Stationary Hidden semi-Markov Model) }
+
+NHSMM es una variaci\'on de HSMM que modela la dependencia de las probabilidades de transici\'on con la duraci\'on de los estados. Este modelo toma en cuenta no s\'olo la duraci\'on expl\'icita de un estado, sino que tambi\'en selecciona la nueva transici\'on de un estado de acuerdo a su duraci\'on exacta, mejorando la precisi\'on del modelo [16]
+
+Figura
+
+
+
+
+\section*{LJTM}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
