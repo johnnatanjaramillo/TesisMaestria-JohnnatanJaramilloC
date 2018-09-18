@@ -13,10 +13,24 @@
 
 
 %********************************** %First Section  **************************************
-\section{Caracteristicas de los sucesos de eventos} %Section - 2.1 
+\section{Caracterización de los sucesos de eventos} %Section - 2.1 
 \label{section2.1}
 
-Coom se mencionó en el capitulo anterior, los sistemas BPM registran todo evento que es generado por los work items que se estan ejecutando, estos sucesos de evento (Event Logs) corresponden por ejemplo a cuando un work item es creado, o cuando es asignado a un usuario, o cuando llega a un cola, etc. Esto debido a que exite información que podría ser relevante en dichos eventos, generalmente esta información de sucesos de eventos se consolida para obtener indicadores de comportamiento del proceso, por ejemplo cuantos workitems estan activos, el tiempo promedio de ejecución de los workitems, etc. Para nuestro caso de estudio, el sistema WFM registra los sucesos de eventos en una tabla de base de datos relacional, esta tabla generalmente contiene un volumen elevado de registros. Cada suceso de evento almacenado esta relacioando con el id del work item que lo generó, al igual que almacena el tiempo de ocurrencia del work item. Otras cartacteristicas relevantes son por ejemplo el identificador de la operación, o el tipo de evento, o el asunto por el cual fue lanzado en flujo, o el ide del usuario.
+Como se mencionó en el capitulo anterior, los sistemas WFM/BPM almacenan todos los sucesos de eventos presentados al procesar los items de trabajo sobre la plataforma. Estos sucesos de evento (event logs)  corresponden por ejemplo a:
+-La creación de un nuevo item de trabajo o work item.
+-La asignación de un determinado item de trabajo a un usuario específico.
+-La llegada de un item de trabajo a un cola específica. 
+-La invocación a un sistema externo.
+-Entre otras.
+
+Toda esta información de suscesos de eventos es relevante al momento de calcular los indicadores del proceso, pues generalmente esto indicadores estan relacionados con tiempos promedio de vida de los items de trabajo, cantidad de items de trabajo activos en determinado momento, etc. Esta información tambien permite identificar ciertos comportamientos en el proceso, por ejemplo permite identificar que tan eficientemente se esta realizando la gestión del proceso. 
+
+Para nuestro caso de estudio, el sistema WFM almacenado los sucesos de eventos en una base de datos relacional, y en una única tabla. Esta tabla tiende a crecer rápidamente en cuanto al número de registros, y adicional a esto generalmente tiene un gran número de registros, en general 100 millones de registros. Esta tabla cuenta con varios campos importantes, por ejemplo el correspondiente al identificador del work item que genero el susceso, tambien en cada regitro se almacena el tiempo en que ocurrio o se dio dicho suceso. Otras caracteristicas interesantes de los sucesos de eventos almacenados por la plataforma son los siguientes:
+-El identificador de la operación, 
+-El tipo de evento, 
+-El identificador del usuario que generó dicho suceso.
+
+Debido al gran volumen de registros con que cuenta la tabla de sucesos, es necesario hacer uso de técnicas y herramientas relaciondas con el Big Data. Esto debido a que trabajar al trabajar con grandes volumenes de información, es necesario
 
 Cabe la pena resaltar que manipular estos sucesps de eventos puede llevar a ser un problema de BigData, dado que para procesos de negocio con grandes volumenes de work items activos, el numero de sucesos de eventos podría hacer que su manipulación sea imanejable, eso ya hace que sea necesario abordar estrategias de manipulación de datos de manera destribuida.
 
@@ -56,6 +70,9 @@ La solución es ejecutada dese el master, se ejecuta un proceso en background po
 
 
 Adicional a esto, la estrategia lo que busca es dividir el set de datos y procesarlo en cada nodo, hacer referencia al esquema del poster funcional
+
+
+Se difinio un esquema en la solución en el cual se almacena el procesamiento realizado, esto con el fin de no perder el trabajo
 
 
 %********************************** %Quarter Section  **************************************
