@@ -11,6 +11,10 @@
     \graphicspath{{Chapter2/Figs/Vector/}{Chapter2/Figs/}}
 \fi
 
+Debido al interés existente de predecir el comportamiento de los elementos de trabajo activos en un proceso de negocio cualquiera, diseñar un sistema con estas funcionalidades toma mucho sentido. En este orden de ideas, las técnicas actuales utilizadas en la minería de procesos, podrían ser extendidas para monitorear el comportamiento de los procesos de negocio, enfocándose específicamente en las secuencias de eventos temporales, lo cual sería de mucha utilidad al momento de realizar predicciones, particularmente identificando workitems que terminaran en un estado de error [7]. Este tipo de predicciones permitiría contar con sistemas que sean tolerantes a comportamientos indeseados o anómalos, y que apliquen acciones correctivas automáticamente al presentarse este tipo de comportamiento o por lo menos notifique la probabilidad de su ocurrencia [8,9].
+
+En este trabajo se pretende implementar una metodología que permita realizar la predicción de errores en sistemas BPM p WfM a partir de dichas secuencias de sucesos de eventos, haciendo uso de las tecnicas propuestas por la minería de procesos.
+
 
 %********************************** %First Section  **************************************
 \section{Caracterización de los sucesos de eventos} %Section - 2.1 
@@ -61,6 +65,8 @@ Las secuencias de susceos de eventos se dividen en dos grupos, en un grupo se ti
 \section{Arquitectura de la solución planteada} %Section - 2.3 
 \label{section2.3}
 
+proceso de desarrollo del entrenamiento y validación
+
 Antes de mostrar la arquitectura donde se impleento la solución se mostrará el los pasos seguidos en el procesamiento de la información, y como son transformados y almacenados (imaghen de los pasos desde la captura de la inforamción, el one hot encoding, y la generación de las secuencias)
 Figura con el flujo.
 
@@ -92,6 +98,8 @@ Luego de tener los modelos, se espera podemos usarlos para evaluar parcialmente 
 %********************************** %Fifth Section  **************************************
 \section{Modelos usados en el sistema de detección de fallas} %Section - 2.5 
 \label{section2.5}
+
+Expicación de porque los modelos hsmm
 
 \section*{HMM (Hidden Markov Model) }
 
