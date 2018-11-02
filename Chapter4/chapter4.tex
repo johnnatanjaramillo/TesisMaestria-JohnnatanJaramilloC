@@ -3,7 +3,7 @@
 %****************************** Quarter Chapter *********************************
 %*******************************************************************************
 
-\chapter{Experimentos y Resultados}
+\chapter{Implementación y programación distribuida}
 
 \ifpdf
     \graphicspath{{Chapter4/Figs/Raster/}{Chapter4/Figs/PDF/}{Chapter4/Figs/}}
@@ -13,10 +13,31 @@
 
 
 %********************************** %First Section  **************************************
-\section{Base de Datos} %Section - 2.1 
+\section{Entrenamiento, validación y predicción de los modelos} %Section - 4.1 
 \label{section4.1}
 
-Metodología de validación
----Medidias de desempeño
+Como se mencionó en el capitulo dos, por cada elemento de trabajo se tiene una secuencia de suscesos, estas secuencias de sucesos tienen una longitud variable, y son almacenados en un dataframe con dos columnas, la primera indica el id del elemento de trabajo, y la segunda corresonde a la secuencias de proceso. A dicional a esta estructura se debe tener encuenta que las secuencias de suscesos estas clasificadas, es decir se tiene un conjunto de secuencias correspondientes a los elementos de trabajo que fallaron en la herramienta WfM, y se tiene otro conjunto de secuencias que no fallaron. Teniendo esta distinción se puede iniciar con el proceso de entrenamiento. Es importance mencionar que estos satoso involucran un problema estructural, esto debido a que existe una dependencia entre observaciones, siempre la siguiente depende de la anterior.
 
-Resultados Paradigma
+Para cada modelo que se valido, se realizó el entrenamiento de cada conjunto de datos, haciendo uso de las crosvalidation con 5 folds, a partir de esto se realizó el calculo de los indicadores que permiten determinar cuales son los mejores parametros para el modelo.
+
+Luego de esto, es posible realizar la evalución de la capacidad de predicción de los modelos, dado que los modelos han sido almacenados previamente, ahora con esto es posible calcular a partir de la longitud de las secuencias el poder de predicción de los modelos, ....
+
+Agregar figura flujo del proceso.
+
+
+
+%********************************** %Second Section  **************************************
+\section{Implementación de los algoritmos } %Section - 4.2 
+\label{section4.2}
+
+LA implementación de los modelos HMM y demas consiste basicamente en definir aleatoriamente los parametros del modelo, que son las matrices A, B, pi, una vez se tienen esotos valores se empieza con el procesamiento, es decir el forwar y el back, este procesos, 
+
+codigo relevante para la implementación y librerías relevantes, blablabla
+
+
+
+%********************************** %Third Section  **************************************
+\section{Programación distribuida} %Section - 4.3 
+\label{section4.3}
+
+Dado que el proceso secuencial es tan deficiente, se procede con el uso de tecnicas de programación distribuidas, como sparl, blblblb donde se usa el repartitions, y el reduce, los cuales eficiente menet reducen considerablemente el rpceoso, tamién se almacenas la info para poder ejecutar procesos de recovery, bablalblb

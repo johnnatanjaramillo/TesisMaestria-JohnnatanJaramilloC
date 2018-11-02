@@ -3,7 +3,7 @@
 %****************************** Second Chapter *********************************
 %*******************************************************************************
 
-\chapter{Diseño del sistema de detección de fallas}
+\chapter{Caracterización Sucesos de Eventos}
 
 \ifpdf
     \graphicspath{{Chapter2/Figs/Raster/}{Chapter2/Figs/PDF/}{Chapter2/Figs/}}
@@ -11,211 +11,57 @@
     \graphicspath{{Chapter2/Figs/Vector/}{Chapter2/Figs/}}
 \fi
 
-Debido al interés existente de predecir el comportamiento de los elementos de trabajo activos en un proceso de negocio cualquiera, diseñar un sistema con estas funcionalidades toma mucho sentido. En este orden de ideas, las técnicas actuales utilizadas en la minería de procesos, podrían ser extendidas para monitorear el comportamiento de los procesos de negocio, enfocándose específicamente en las secuencias de eventos temporales, lo cual sería de mucha utilidad al momento de realizar predicciones, particularmente identificando workitems que terminaran en un estado de error [7]. Este tipo de predicciones permitiría contar con sistemas que sean tolerantes a comportamientos indeseados o anómalos, y que apliquen acciones correctivas automáticamente al presentarse este tipo de comportamiento o por lo menos notifique la probabilidad de su ocurrencia [8,9].
+Como se mencionó en el capitulo anterior, los sistemas WfM/BPM almacenan todos los sucesos de eventos generados al procesar cualquier elemento de trabajo. Estos sucesos de eventos o event logs en inglés, pueden estar relacionados por ejemplo con la creación de un nuevo elemento de trabajo, la asignación de un determinado elemento de trabajo a un usuario específico, la llegada de un elemento de trabajo a un cola específica, la invocación a un sistema externo, entre otras.
 
-En este trabajo se pretende implementar una metodología que permita realizar la predicción de errores en sistemas BPM p WfM a partir de dichas secuencias de sucesos de eventos, haciendo uso de las tecnicas propuestas por la minería de procesos.
+Específicamente para nuestro caso de estudio, los sucesos de eventos son almacenados en una única tabla, la cual se encuentran definida dentro de una base de datos relacional. La cantidad de registros de esta tabla crece con relación al número de elementos de trabajos procesados por el sistema, lo que quiere decir que para procesos que gestionan grandes cantidades de elementos de trabajo, se tienen grandes volúmenes de información. Esta tabla de sucesos de eventos cuenta con varios campos importantes, los cuales proveen información relevante al momento de identificar el comportamiento de los elementos de trabajo.
 
+En vista de lo anterior, y teniendo en cuenta que, el primer paso para abordar un problema haciendo uso de la inteligencia computacional es la caracterización de la base de datos, a continuación se describirá todo el proceso llevado a cabo para realizar dicha tarea.
 
 %********************************** %First Section  **************************************
-\section{Caracterización de los sucesos de eventos} %Section - 2.1 
+\section{Selección de Características} %Section - 2.1 
 \label{section2.1}
 
-Como se mencionó en el capitulo anterior, los sistemas WFM/BPM almacenan todos los sucesos de eventos presentados al procesar los items de trabajo sobre la plataforma. Estos sucesos de evento (event logs)  corresponden por ejemplo a:
--La creación de un nuevo item de trabajo o work item.
--La asignación de un determinado item de trabajo a un usuario específico.
--La llegada de un item de trabajo a un cola específica. 
--La invocación a un sistema externo.
--Entre otras.
+Al hacer uso de técnicas de machine learning o de inteligencia computacional, es usual que no sea necesario tener en cuenta todas las características de la base de datos, pues generalmente con solo algunas de estas características es posible describir adecuadamente el comportamiento de los datos. Adicional a lo anterior, tener en cuenta todas las características de la base de datos podría incrementar el costo computacional, al igual que podría hacer que los resultados obtenidos no sean los mejores. 
 
-Toda esta información de suscesos de eventos es relevante al momento de calcular los indicadores del proceso, pues generalmente esto indicadores estan relacionados con tiempos promedio de vida de los items de trabajo, cantidad de items de trabajo activos en determinado momento, etc. Esta información tambien permite identificar ciertos comportamientos en el proceso, por ejemplo permite identificar que tan eficientemente se esta realizando la gestión del proceso. 
-
-Para nuestro caso de estudio, el sistema WFM almacenado los sucesos de eventos en una base de datos relacional, y en una única tabla. Esta tabla tiende a crecer rápidamente en cuanto al número de registros, y adicional a esto generalmente tiene un gran número de registros, en general 100 millones de registros. Esta tabla cuenta con varios campos importantes, por ejemplo el correspondiente al identificador del work item que genero el susceso, tambien en cada regitro se almacena el tiempo en que ocurrio o se dio dicho suceso. Otras caracteristicas interesantes de los sucesos de eventos almacenados por la plataforma son los siguientes:
--El identificador de la operación, 
--El tipo de evento, 
--El identificador del usuario que generó dicho suceso.
-
-Debido al gran volumen de registros con que cuenta la tabla de sucesos, es necesario hacer uso de técnicas y herramientas relaciondas con el Big Data. Esto debido a que trabajar al trabajar con grandes volumenes de información, es necesario
-
-Cabe la pena resaltar que manipular estos sucesps de eventos puede llevar a ser un problema de BigData, dado que para procesos de negocio con grandes volumenes de work items activos, el numero de sucesos de eventos podría hacer que su manipulación sea imanejable, eso ya hace que sea necesario abordar estrategias de manipulación de datos de manera destribuida.
-
-Al realizar el analisis de las caracteristicas relevantes de los sucesos de eventos almacenados en la base de datos, se evidencio que todos estas caracteristicas eran categoricas, por lo cual se uso one hot encoding para categorizar o mapear los diferentes sucesos de eventos y relacionarlos con un estado. Con el one hot enconding se obtuvo un numero binario muy grante, el cual se trasnformo a un bigint, y este nuevo bigint.
-
-Que tanto se debe detallar las caracteristicas??
-Figura, donde se muestra como las caracteristicas de los sucesos de eventos con transformadas a un bgint.(donde tengo wobnum, seqnumbre, value)
-
-
-NO olvidar hablar de la cuantización de los sucesos de eventos. Pero no en esta sección
+Para nuestro caso, se consideraron las siguientes características, las cuales fueron seleccionadas a partir del conocimiento específico de la herramienta tecnológica que las genera.
 
 
 %********************************** %Second Section  **************************************
-\section{Secuencias de Sucesos de Eventos } %Section - 2.2 
+\section{One Hot Encoding} %Section - 2.2 
 \label{section2.2}
 
-Una vez realizada la caracterización de los sucesos de eventos, y teniendo los numeros enteros relacionados con los sucesos de eventos, es necesario generar las secuancias de sucesos de eventos, con estas secuencias se podran identificar patrones en el comportamiento de los work items. Con el uso de Spark esta tarea es sencilla, basicamente se realiza la agrupación de las filas por el id wobnum, y se aplica una función de reducción donde se generar un arreglo de cada bigint ordenados de manera desendente por si tiempo de ocurrencia. Esas secuencias tomaron longitudes de hasta (consultar)
+Como se puede ver en la sección anterior, todas las características seleccionadas son categóricas. Lo implica que sea necesario realizar algún tipo de transformación sobre los datos, de tal manera que sea posible modelar adecuadamente los datos, al igual que aplicar las técnicas de machine leaning propuesta en este trabajo. En este orden de ideas, el mecanismo usado para realizar la categorización de los sucesos de eventos es el llamado One Hot Encoding. 
 
-Figura que muestra como se realiza el agrupamiento, y luego se genera la secuancia. 
+La técnica de One Hot Encoding sugiere la creación de nuevas columnas sobre la base de datos, donde cada nueva columna corresponde a una categoría de alguna de las características que componen la base de datos. Además, su valor será uno si determinado registro se encuentra asociado a dicha categoría, y en caso contrarío sería cero. La figura tal ilustra de una mejor manera lo mencionado anteriormente.  
 
-
-Las secuencias de susceos de eventos se dividen en dos grupos, en un grupo se tienen todas las secuencias que temrinaron en una falla, y en el otro grupo se tienen las secuencias que finalizaron de manera adecuada.
-
-
-
+Este proceso de One Hot Encoding da como resultado para cada registro de la base de datos un vector binario, tal como se muestra en la figura tal.
 
 %********************************** %Third Section  **************************************
-\section{Arquitectura de la solución planteada} %Section - 2.3 
+\section{Métodos de cuantización vectorial evaluados} %Section - 2.3 
 \label{section2.3}
 
-proceso de desarrollo del entrenamiento y validación
+Una vez realizada la categorización de los sucesos de eventos, es necesario convertir los vectores binarios mencionados en la sección anterior a números enteros, de tal manera que sea más fácil almacenarlos y manipularlos. La figura tal muestra un ejemplo de como lucen las secuencias de sucesos de eventos después de todo el proceso realizado anteriormente. 
 
-Antes de mostrar la arquitectura donde se impleento la solución se mostrará el los pasos seguidos en el procesamiento de la información, y como son transformados y almacenados (imaghen de los pasos desde la captura de la inforamción, el one hot encoding, y la generación de las secuencias)
-Figura con el flujo.
+Sin embargo, la estructura obtenida para las secuencias de sucesos de eventos mostrada en la figura tal presentan un inconveniente, pues los valores obtenidos para cada uno de los sucesos de eventos no conforman una secuencia continua. Es por esto que debe realizarse un proceso denominado cuantización vectorial sobre los nuevos datos obtenidos. Este proceso busca que los nuevos datos sean almacenados de la forma más compacta posible, y también que sean representados con suficiente precisión, de tal manera que sea posible generar una secuencia continua con dichas observaciones [51]. Agregar figura. 
 
-Alquitectura de Infraestructura del clusters la solución planteada: Información del cluster (un master, cuatro nodos, caracteristicas de cores y ram)
+Generalmente, este proceso de cuantización vectorial se lleva a cabo haciendo uso de técnicas o métodos de clasificación. En la literatura se ha encontrado que el método más usado es el K-means. Sin embargo, la condición de los datos que se están modelando en este trabajo suponen una dificultad, pues las observaciones obtenidas corresponden a vectores binarios, sobre los cuales no se puede aplicar una medida de distancia como la euclidiana, y por el contrario es necesario usar la distancia hamming. 
 
-La solución es ejecutada dese el master, se ejecuta un proceso en background por medio deun coando nunh, y se escribe en logs la información de trazabilidad. tabien se asignan los recursos quesean usados por el trabajo lanzado. 
+Debido a que tal vez los resultados obtenidos con la técnica de K-means y la distancia hamming no sean los mejores, se hace uso también de la técnica de K-mode, la cual toma en cuenta la moda de las distancias de los diferentes puntos. Esta técnica es comúnmente usada para clasificar secuencias genéticas.   
 
-
-Adicional a esto, la estrategia lo que busca es dividir el set de datos y procesarlo en cada nodo, hacer referencia al esquema del poster funcional
+En conclusión, dentro del proceso de cuantización de los datos se tuvieron en cuenta tres métodos. El método de K-means, el método de K-moda, y por último, un método que no hace uso de técnicas de clasificación, pero que le asigna un único identificador a cada observación.
 
 
-Se difinio un esquema en la solución en el cual se almacena el procesamiento realizado, esto con el fin de no perder el trabajo
+%llever a la seccion de entrenamiento e implementación
+es necesario generar las secuencias de sucesos de eventos, con estas secuencias se podrán identificar patrones en el comportamiento de los work items. Esto es importante debido que se esta abordando un problema relacionado con aprendizaje estructura, es decir que existen una dependencia entre cada nuevo suceso de evento con el anterior. Adicional, esta sería la estructura que soportan los modelos que son implementados para este trabajo.
+
+Varias tareas se deben tener en cuenta para generar dichas secuencias de sucesos, primero se deben separar las secuencias que están asociadas a un error con las secuencias que no lo están, luego a partir de la característica de tiempo se ordenan los registros y se genera la secuencias con orden temporal. Para nuestro caso se estudio, la longitud de las secuencias pueden variar bastante, puedes existir secuencias muy pequeñas, pero también secuencias muy extensas, el maximo de observaciones es hasta de seis mil.
+La sigueinte figura ilustra el proceso de generación de las secuencias de sucesos. Figura
+%hasta acá
+
 
 
 %********************************** %Quarter Section  **************************************
-\section{Detección de fallas a partir de secuencias de susces de eventos} %Section - 2.4 
+\section{Métodos de cuantización vectorial evaluados} %Section - 2.4 
 \label{section2.4}
-
-En este trabajo se pretende identificar comportamientos atipicos dentro de las secuencias de eventos registradas por los sismteas BPM haciendo uso de modelos de inteligencia computación como HMM; HSMM, NHSMM y LJTM. A partir de estos comportamientos atipicos es posible anticiparse ante una ocurrencia de una falla en el sistema o incluso en un work item especifico. 
-
-Por tal motivo es necesario obtener un modelo por cada uno de los set de datos a procesar (es decir las secuencias con error y las que no estan asociadas al error). De esta manera se obtendran dos modelos para HMM, dos para HSMM y así sucesivamente. También para cada uno de los modelos planteados se debe estimar los hiperparametros que permitan obtner los mejores resultados. 
-
-
-Luego de tener los modelos, se espera podemos usarlos para evaluar parcialmente las secuencias de los set de datos y detemrinar cual es la lingitud minima que se debe tener para poder realizar una predicción adecuada.
-
-
-
-
-%********************************** %Fifth Section  **************************************
-\section{Modelos usados en el sistema de detección de fallas} %Section - 2.5 
-\label{section2.5}
-
-Expicación de porque los modelos hsmm
-
-\section*{HMM (Hidden Markov Model) }
-
-HMM es una extensi\'on de un proceso de Markov discreto. Sin embargo, la principal diferencia entre HMM y los modelos de Markov planos, es que en HMM el estado actual del proceso no puede ser observado, y se denomina un estado oculto [15]
-
-Figura de Hidden Markov Model.
-
-Un HMM b\'asicamente se define como una tupla $\boldsymbol\lambda = (\textbf{A},\textbf{B},\boldsymbol\pi)$, donde:
-
-\begin{itemize}
-
-\item El conjunto de estados ocultos del modelo est\'a dado por: $\textbf{\textit{S}}=\lbrace 1,...,N \rbrace$
-
-\item Una secuencia de estados se denota: $S_{1:T}=(S_{1},...,S_{T})$, donde $S_{t} \in \textbf{S}$ es el estado en el tiempo \textit{t}
-
-\item \textbf{A} corresponde a la matriz de probabilidades de transici\'on entre estados ocultos, y est\'a dada por:
-\begin{equation}
-\textbf{A} = \lbrace a_{ij} \vert a_{ij} = P(S_{t} = j \vert S_{t-1} = i) \rbrace
-\end{equation}
-
-\item $\boldsymbol\pi$ corresponde al vector de probabilidades iniciales del modelo, y est\'a dado por: 
-\begin{equation}
-\boldsymbol\pi = \lbrace \pi_{i} \vert \pi_{i} = P(S_{0} = i) \rbrace
-\end{equation}
-
-\item El conjunto de valores observables es: $\textbf{V} = \lbrace v_{1}, v_{2},...,v_{K} \rbrace$
-
-\item Una secuencia de observaciones es denotada por: $O_{1:T} = (O_{1},O_{2},...,O_{T})$, donde $O_{t} \in \textbf{V}$ es la observaci\'on en el tiempo \textit{t}
-
-\item \textbf{B} corresponde a la matriz de probabilidades de transici\'on entre los estados y las observaciones:
-\begin{equation}
-\textbf{B} = \lbrace b_{j(v_{k})} \vert b_{j(v_{k})} = P(v_{k} \vert S_{t} = j) \rbrace
-\end{equation}
-
-\end{itemize}
-
-
-Por otro lado, se define la variable \textit{forward} como la probabilidad conjunta de $S_{t}=j$ y la secuencia parcial observada $o_{1:t}$
-\begin{equation}
-\alpha_{t}(j) = P(S_{t} = j, o_{1:t} \vert \boldsymbol\lambda)
-\end{equation}
-
-Y la variable \textit{backward} como la probabilidad de la futura observaci\'on dado un estado actual.
-\begin{equation}
-\beta_{t}(j) = P(o_{t+1:T} \vert S_{t} = j, \boldsymbol\lambda)
-\end{equation}
-
-
-\section*{HSMM (Hidden semi-Markov Model) }
-
-HSMM es una extensi\'on de un proceso de semi-Markov. Donde la duraci\'on de los estados denotada por la letra \textit{d}, se define como una variable aleatoria y entera. 
-\\La principal diferencia entre HMM y HSMM, es que en HMM se asume un estado por observaci\'on, mientras que en HSMM cada estado puede emitir una secuencia de observaciones cualquiera [15]
-
-Figura con el HSMM
-
-En HSMM se realizan algunas modificaciones respecto a los par\'ametros definidos para HMM:
-
-\begin{itemize}
-\item La duraci\'on en determinado estado pertenece al conjunto $\textbf{D} = \lbrace 1,2,...,D \rbrace$, donde \textit{D} es la m\'axima duraci\'on en un estado.
-
-\item La matriz \textbf{A} se redefine como: 
-\begin{equation}
-\textbf{A} = \lbrace a_{(i,h)(j,d)} \vert a_{(i,h)(j,d)} = P(S_{[t+1:t+d]} = j \vert S_{[t-h+1:t]} = i) \rbrace
-\end{equation}
-
-\item El vector $\boldsymbol\pi$ se redefine como:
-\begin{equation}
-\boldsymbol\pi = \lbrace \pi_{i,d} \vert \pi_{i,d} = P(S_{[t-d+1:t]} = j) \rbrace ; t \leqslant 0
-\end{equation}
-
-\item La matriz \textbf{B} se redefine como:
-\begin{equation}
-\textbf{B} = \lbrace b_{j,d(o_{t+1:t+d})} \vert b_{j,d(o_{t+1:t+d})} = P(o_{t+1:t+d} \vert S_{[t+1:t+d]} = j) \rbrace
-\end{equation}
-
-\end{itemize}
-
-Las variables \textit{forward} y \textit{backward} tambi\'en presentan modificaciones:
-
-\begin{equation}
-\alpha_{t}(j,d) = P(S_{t-d+1:t} = j, o_{1:t} \vert \boldsymbol\lambda)
-\end{equation}
-
-\begin{equation}
-\beta_{t}(j,d) = P(o_{t+1:T} \vert S_{[t-d+1:t]} = j, \boldsymbol\lambda)
-\end{equation}
-
-
-\section*{NHSMM (Non Stationary Hidden semi-Markov Model) }
-
-NHSMM es una variaci\'on de HSMM que modela la dependencia de las probabilidades de transici\'on con la duraci\'on de los estados. Este modelo toma en cuenta no s\'olo la duraci\'on expl\'icita de un estado, sino que tambi\'en selecciona la nueva transici\'on de un estado de acuerdo a su duraci\'on exacta, mejorando la precisi\'on del modelo [16]
-
-Figura
-
-
-
-
-\section*{LJTM}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
