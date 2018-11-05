@@ -12,6 +12,13 @@
 \fi
 
 
+%llever a la seccion de entrenamiento e implementación
+es necesario generar las secuencias de sucesos de eventos, con estas secuencias se podrán identificar patrones en el comportamiento de los work items. Esto es importante debido que se esta abordando un problema relacionado con aprendizaje estructura, es decir que existen una dependencia entre cada nuevo suceso de evento con el anterior. Adicional, esta sería la estructura que soportan los modelos que son implementados para este trabajo.
+
+Varias tareas se deben tener en cuenta para generar dichas secuencias de sucesos, primero se deben separar las secuencias que están asociadas a un error con las secuencias que no lo están, luego a partir de la característica de tiempo se ordenan los registros y se genera la secuencias con orden temporal. Para nuestro caso se estudio, la longitud de las secuencias pueden variar bastante, puedes existir secuencias muy pequeñas, pero también secuencias muy extensas, el maximo de observaciones es hasta de seis mil.
+La sigueinte figura ilustra el proceso de generación de las secuencias de sucesos. Figura
+%hasta acá
+
 %********************************** %First Section  **************************************
 \section{Entrenamiento, validación y predicción de los modelos} %Section - 4.1 
 \label{section4.1}
