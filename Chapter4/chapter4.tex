@@ -11,40 +11,84 @@
     \graphicspath{{Chapter4/Figs/Vector/}{Chapter4/Figs/}}
 \fi
 
+Como se menciona en el capítulo anterior, los modelos propuestos para este trabajo de investigación pueden llegar a ser computacionalmente muy costosos, principalmente por dos aspectos. Por un lado, cuando la longitud de las secuencias de sucesos de eventos es muy larga, y por otro, cuando se tiene una gran cantidad de secuencias para entrenar dichos modelos. También, el desempeño de los algoritmos podría verse afectado al asignar ciertos valores a los parámetros de los modelos, por ejemplo, al asignar un valor muy alto al número de estados ocultos del modelo. Las condiciones anteriores se presentan en las secuencias de sucesos de eventos generadas por los los sistemas WfM/BPM, razón por la cual es necesario plantear alguna estrategia que permite disminuir los tiempo de entrenamiento de dichos modelos.
 
-%llever a la seccion de entrenamiento e implementación
-es necesario generar las secuencias de sucesos de eventos, con estas secuencias se podrán identificar patrones en el comportamiento de los work items. Esto es importante debido que se esta abordando un problema relacionado con aprendizaje estructura, es decir que existen una dependencia entre cada nuevo suceso de evento con el anterior. Adicional, esta sería la estructura que soportan los modelos que son implementados para este trabajo.
+De acuerdo a lo anterior, este trabajo propone hacer uso de un concepto llamado MapReduce(hacer referencia), una técnica muy popular dentro del contexto del Big Data, y que se ejecuta sobre servidores configurados en cluster que permite realizar todo el procesamiento de la información de manera distribuida. Esto último es bastante útil, pues los tiempo de ejecución puede disminuirse a medica que se agregan nuevos recursos al cluster, ya sean más procesadores, memoria o nodos. 
 
-Varias tareas se deben tener en cuenta para generar dichas secuencias de sucesos, primero se deben separar las secuencias que están asociadas a un error con las secuencias que no lo están, luego a partir de la característica de tiempo se ordenan los registros y se genera la secuencias con orden temporal. Para nuestro caso se estudio, la longitud de las secuencias pueden variar bastante, puedes existir secuencias muy pequeñas, pero también secuencias muy extensas, el maximo de observaciones es hasta de seis mil.
-La sigueinte figura ilustra el proceso de generación de las secuencias de sucesos. Figura
-%hasta acá
+Particularmente la implementación que se propone en este trabajo se encuentra en Apache Spark, un API desarrollada en Scala que permite realizar todo el procesamiento distribuido en memoria, mejorando significativamente los tiempo de ejecución respecto a otros sistemas de procesamiento distribuido como Apache Haddop. De igual manera Apache Spark se ha convertido en una herramienta muy popular para la implementacion de modelos de inteligencia computacional, de hecho en la actulidad cuenta con su propia librería de machine learning, la cual provee multiples implementaciones de modelos de inteligencia computacional, pero dentro del contexto del big data y haciendo uso de procesamiento distribuido. A pesar de contar con esta librería, aún no se cuenta con la implementación de algunos modelos de interes, como para nuestro caso son los HMM, HSMM o NHSMM, sin embargo esto no es una limitación para implementarlos dichos modelos. Apache Spark no solo es util para la implementación de los modelos de inteligencia artificial, si no que también permite o facilita todo el trabajo de preprocesamiento antedes de poder realizar el entrenamiento de los modelos a partir de los datos.
+
+Importante, es un proceso iterativo!!!se tienen dos criterior de parada, ....
+
+A continuación se detallaran las particularidades de cada no de los modelos HMM,  cada una de las implementaciones realizadas para cada uno de los modelos propuestos en este trabajo de investigación, al igual que la estrategia usada para todo el procesamiento distribuido:
+
 
 %********************************** %First Section  **************************************
-\section{Entrenamiento, validación y predicción de los modelos} %Section - 4.1 
-\label{section4.1}
+\section{Implementación algoritmos de entrenamiento y validación} %Section - 4.1 \label{section4.1}
 
-Como se mencionó en el capitulo dos, por cada elemento de trabajo se tiene una secuencia de suscesos, estas secuencias de sucesos tienen una longitud variable, y son almacenados en un dataframe con dos columnas, la primera indica el id del elemento de trabajo, y la segunda corresonde a la secuencias de proceso. A dicional a esta estructura se debe tener encuenta que las secuencias de suscesos estas clasificadas, es decir se tiene un conjunto de secuencias correspondientes a los elementos de trabajo que fallaron en la herramienta WfM, y se tiene otro conjunto de secuencias que no fallaron. Teniendo esta distinción se puede iniciar con el proceso de entrenamiento. Es importance mencionar que estos satoso involucran un problema estructural, esto debido a que existe una dependencia entre observaciones, siempre la siguiente depende de la anterior.
+Como se menciono en el capítulo dos, las secuencias de suscesos de eventos analizadas en este trabajo son generadas por un sistemas WfM/BPM. Estas secuencias pueden ser clasificadas en dos categorias, una correpondiente a la secuencias que finalizaron de manera correcta en el sistema, y la otra correspondiente a las secuencias que finalizaron en un estado de error, o que se encuentren aún en un estado de error. Con el fin de identificar que nuevas secuencias de sucesos de eventos finalizarán adecuadamenteo o no, se contará o entrenerán dos modelos, uno correcpondiente a la clase de secuencias con error, y otro a las clase de secuencias son error. 
 
-Para cada modelo que se valido, se realizó el entrenamiento de cada conjunto de datos, haciendo uso de las crosvalidation con 5 folds, a partir de esto se realizó el calculo de los indicadores que permiten determinar cuales son los mejores parametros para el modelo.
+%un problema relacionado con aprendizaje estructural
+Debido a las caracteristicas de los datos, en este caso secuencias de sucesos de eventos que se general de manera temporal, el problema que se esta abordando es un problema de aprendizaje estructural, en el cual la predicción de una siguiente observacion depende de las observaciones anterior, esto limita un poco las posibilidades en cuenta a poder adoptar una estrategia que reduzca los tiempo de entrenamiento de los modelos.
 
-Luego de esto, es posible realizar la evalución de la capacidad de predicción de los modelos, dado que los modelos han sido almacenados previamente, ahora con esto es posible calcular a partir de la longitud de las secuencias el poder de predicción de los modelos, ....
-
-Agregar figura flujo del proceso.
+Los modelos HMM, HSMM, NHSMM implementados en este trabajo cuentan con ciertas particularidades. La primera consiste en que para cada secuencia de sucesos de eventos se estiman los parametros del modelo que estará asociado con dicha secuencia, esto se muestra en la figura [*]. Este proceso es un proceso iterativo, y se tienen dos condiciones de parada, por un lado la del epsilon y por otra un maximo de iteraciones
 
 
+Explicar el metodo de maxima verosimilitud.
+Una vez se cuenta con la nueva colección de modelos se procede con la estimación de un único modelo, esto por medio de el metodo de máxima verosimilitud. Sin embargo, este metodo llevandolo a un contexto número consiste en sacar el logarimo natural de los residuales luego de normalizar los parametros alfa estimados y sumarlos, como se muestra en la figura tal. En las siguiente secciones de este capítulo se explicará más en detalle la implementación de cada uno de los modelos.
+
+
+Finalmene, para el proceso de entrenamiento y validación de los modelos, se hace uso de la metodología llamada Validación Cruzada, esta tecnica consiste en dividir la base de datos en diferentes folds, particularmente para este caso se determinó usar 5 folds, un valor que es comunmente usado. Una vez se tienen la base de datos segmentada en estos grupos, se realiza el proceso cinco veces, en cada uno se selecciona un grupo para la validación del modelo obtenigo, y se entrena el modelo con los grupos restantes. En el capitulo de resultado, se muestran los resultados y los indicadores de cada modelo obtenido. Agregar figura.
+
+Para el modelo LSTM existen algunas particularidades que se explicaran en la sección 4.1.4.
+
+
+%Como se mencionó en el capitulo dos, por cada elemento de trabajo se tiene una secuencia de suscesos, estas secuencias de sucesos tienen una longitud variable, y son almacenados en un dataframe con dos columnas, la primera indica el id del elemento de trabajo, y la segunda corresonde a la secuencias de proceso. A dicional a esta estructura se debe tener encuenta que las secuencias de suscesos estas clasificadas, es decir se tiene un conjunto de secuencias correspondientes a los elementos de trabajo que fallaron en la herramienta WfM, y se tiene otro conjunto de secuencias que no fallaron. Teniendo esta distinción se puede iniciar con el proceso de entrenamiento. Es importance mencionar que estos satoso involucran un problema estructural, esto debido a que existe una dependencia entre observaciones, siempre la siguiente depende de la anterior.
+
+%Para cada modelo que se valido, se realizó el entrenamiento de cada conjunto de datos, haciendo uso de las crosvalidation con 5 folds, a partir de esto se realizó el calculo de los indicadores que permiten determinar cuales son los mejores parametros para el modelo.
+
+%Luego de esto, es posible realizar la evalución de la capacidad de predicción de los modelos, dado que los modelos han sido almacenados previamente, ahora con esto es posible calcular a partir de la longitud de las secuencias el poder de predicción de los modelos, ....
+
+%Agregar figura flujo del proceso.
+
+
+
+\subsection{Implementación algoritmo de entrenamiento para HMM} %Section - 4.1.1 
+\label{section4.1.1}
+
+Parametros de entrada, 
+Parametros de estimación, 
+
+--hace referencia a la sección donde se explica, y se explica numericamente que hace, los parametros como insumos, y los parametros de que estimar, el orden de las matrices y demas
+
+\subsection{Implementación algoritmo de entrenamiento para HSMM} %Section - 4.1.2 
+\label{section4.1.2}
+
+--hace referencia a la sección donde se explica, y se explica numericamente que hace, los parametros como insumos, y los parametros de que estimar, el orden de las matrices y demas
+
+\subsection{Implementación algoritmo de entrenamiento para NHSMM} %Section - 4.1.3 
+\label{section4.1.3}
+
+--hace referencia a la sección donde se explica, y se explica numericamente que hace, los parametros como insumos, y los parametros de que estimar, el orden de las matrices y demas
+
+\subsection{Implementación algoritmo de entrenamiento para LSTM} %Section - 4.1.4 
+\label{section4.1.4}
 
 %********************************** %Second Section  **************************************
-\section{Implementación de los algoritmos } %Section - 4.2 
+\section{Programación distribuida} %Section - 4.2 
 \label{section4.2}
 
-LA implementación de los modelos HMM y demas consiste basicamente en definir aleatoriamente los parametros del modelo, que son las matrices A, B, pi, una vez se tienen esotos valores se empieza con el procesamiento, es decir el forwar y el back, este procesos, 
+--debido a que realiar el entrenamiento de ls modelo linealmente tomaría mucho tiempo, se aprovecho spark, para realizar estre trabajo, esto se realico usando mpa reduce, y consolidando la sumatorias, 
+importante tener en cuneta que en spark las operaciones deben ser asociativas y comutativas,. 
+también es necesario tener claridad de varias cosas, como el numero de contenedores, y cores, al igual que configuraciones del cluster.
 
-codigo relevante para la implementación y librerías relevantes, blablabla
+%LA implementación de los modelos HMM y demas consiste basicamente en definir aleatoriamente los parametros del modelo, que son las matrices A, B, pi, una vez se tienen esotos valores se empieza con el procesamiento, es decir el forwar y el back, este procesos, 
+
+%codigo relevante para la implementación y librerías relevantes, blablabla
 
 
 
 %********************************** %Third Section  **************************************
-\section{Programación distribuida} %Section - 4.3 
+\section{Predicción de fallas a partir de la longiutd de las secuencias} %Section - 4.3 
 \label{section4.3}
 
-Dado que el proceso secuencial es tan deficiente, se procede con el uso de tecnicas de programación distribuidas, como sparl, blblblb donde se usa el repartitions, y el reduce, los cuales eficiente menet reducen considerablemente el rpceoso, tamién se almacenas la info para poder ejecutar procesos de recovery, bablalblb
+%Dado que el proceso secuencial es tan deficiente, se procede con el uso de tecnicas de programación distribuidas, como sparl, blblblb donde se usa el repartitions, y el reduce, los cuales eficiente menet reducen considerablemente el rpceoso, tamién se almacenas la info para poder ejecutar procesos de recovery, bablalblb

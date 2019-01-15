@@ -11,9 +11,8 @@
     \graphicspath{{Chapter3/Figs/Vector/}{Chapter3/Figs/}}
 \fi
 
-
-
-Como se ha mencionado anteriormente, existe un interés importante en predecir el comportamiento de los elementos de trabajo activos en un proceso de negocio cualquiera, lo cual hace que diseñar un sistema con dichas funcionalidades tome mucho sentido. Es por lo anterior, que las técnicas actualmente utilizadas en la minería de procesos podrían ser extendidas, de tal manera que sea posible monitorear el comportamiento de los elementos de trabajo activos en cualquier procesos de negocio. Esto último, haciendo uso de secuencias de sucesos de eventos temporales, pues este tipo de secuencias serían de mucha utilidad al momento de realizar predicciones, por ejemplo, identificando workitems que terminaran en un estado de error \cite{Kang2014}. Este tipo de predicciones, permitiría contar con sistemas que sean tolerantes a comportamientos indeseados o anómalos, y que apliquen acciones correctivas automáticamente al presentarse este tipo de comportamiento, o por lo menos notifique la probabilidad de su ocurrencia \cite{Yu2006,Salfner2007}. 
+Como se ha mencionado anteriormente, existe un interés importante en predecir el comportamiento de los elementos de trabajo activos en un proceso de negocio cualquiera, lo cual hace que diseñar un sistema con dichas funcionalidades tome mucho sentido. Es por lo anterior, que las técnicas actualmente utilizadas en la minería de procesos podrían ser extendidas, de tal manera que sea posible monitorear el comportamiento de los elementos de trabajo activos en cualquier proceso de negocio. Esto último, haciendo uso de secuencias de sucesos de eventos temporales, pues este tipo de secuencias serían de mucha utilidad al momento de realizar predicciones. Por ejemplo, identificando workitems que terminarán en un estado de error \cite{Kang2014}. Este tipo de predicciones, permitiría contar con sistemas que sean tolerantes a comportamientos indeseados o anómalos, y que apliquen acciones correctivas automáticamente al presentarse este tipo de comportamiento, o por lo menos notifique la probabilidad de su ocurrencia \cite{Yu2006,Salfner2007}. 
+(hacer enfasis en que los modelos HSMM se ajustan bastante bien a los problemas de secuancias de susceos caracteristica propia de los procesos BPM)
 
 En este capitulo, se explicarán los modelos que podrían ser usados en la implementación de un sistema de detección de fallas, al igual que se hablará de su costo computacional.
 
@@ -21,90 +20,137 @@ En este capitulo, se explicarán los modelos que podrían ser usados en la imple
 \section{Modelos propuestos para la implementación de un sistema de detección de fallas} %Section - 3.1 
 \label{section3.1}
 
-En la minería de procesos es común el uso de modelos probabilísticos debido a la flexibilidad que estos ofrecen [12], por ejemplo modelos como el de estados ocultos de Markov (HMM, Hidden Markov Model) son frecuentemente usados debido a la capacidad que han mostrado para resolver múltiples problemas en los que la información a analizar corresponde a secuencias temporales [12]. Estos se ajustan adecuadamente a datos históricos, al igual que a los cambios presentados en los procesos de negocio a lo largo del tiempo [11]. Sin embargo, existen otras variaciones del HMM que también se han propuesto en la minería de procesos, como por ejemplo el HSMM, el cual tiene en cuenta el tiempo de ocurrencia de los sucesos de eventos. Otros modelos aunque no han sido usados aún en la minería de procesos, en ocasiones describen bastante bien patrones en secuencias de observaciones. 
+Como se mencionó anteriormente, la minería de procesos frecuentemente hace uso de modelos probabilísticos debido a la flexibilidad que estos ofrecen. Por ejemplo, modelos como el de estados ocultos de Markov (HMM, Hidden Markov Model) son ampliamente usados debido a la capacidad que han mostrado para resolver múltiples problemas en los que la información a analizar corresponde a secuencias temporales \cite{DaSilva2009}. También se ajustan bastante bien a los datos históricos, y a los cambios que pueden presentarse dentro de los procesos de negocio a lo largo del tiempo \cite{Rozinat2008}. Sin embargo, existen otras variaciones del HMM que también se han propuesto en la minería de procesos, como por ejemplo el modelo de estados ocultos de semi-Markov (HSMM, Hidden semi Markov Model). Este último, tiene en cuenta el tiempo de ocurrencia de los sucesos de eventos, al igual que la duración en que el proceso permanece en determinado estado. Recientemente se han vuelto muy populares modelos basados en redes neuronales, como por ejemplo los LSTM. Estos modelos consisten en ... (continuar con su descripción)
 
-Por último, los modelos LJTM son bastentes populares en la actualidad, ...
-
-A continuación se explicará más en detalle el funcionamiento de dichos modelos.
+A continuación, se explicará detalladamente cada uno de los modelos que se tuvieron en cuenta para este trabajo de investigación, estos son usados para clasificar las secuencias de sucesos de eventos que finalizan en un estado de error y las que no, también se usan para predecir si una de estas secuencias terminará en un estado de error o no.
 
 \subsection{HMM (Hidden Markov Model) }
 
-Los HMMs pueden lidiar bastante bien con el ruido en los datos e información incompleta, y han sido ampliamente usados en diferentes tareas de reconocimiento, principalmente asociadas a secuencias de datos como es el caso de los procesos BPM [5]. Estos comúnmente son  definidos como una cadena de Markov homogénea de estados finitos con tiempos discretos, observados a partir de un conjunto finito de densidades de transiciones, indexadas por los estados de una cadena de Markov [8]. Agregar figura y explicando el hmm, basicamente lo que hace es predecir predecir el comportamiento de una secuencia que se va generando a partir de unas observaciones.
-Figura de Hidden Markov Model.
+%no estoy seguro de si este parrafo debería estar acá
+Los modelos de estados ocultos de Markov pueden lidiar bastante bien con problemas de ruido en los datos, al igual que con información incompleta. Estos han sido ampliamente usados en diferentes tareas de reconocimiento de patrones, al igual que en situaciones en donde los datos a analizar comprenden secuencias de información como es el caso de los procesos BPM \cite{Pandey2011}. %
 
+En \cite{Fink2014}, los modelos de estados ocultos de Markov se definen como un proceso estocástico de dos etapas. La primer etapa consiste en un proceso estocástico discreto estacionario que cuenta con un espacio finito de estados. Este proceso estocástico, también es conocido como un modelo de cadenas de Markov, el cual describe las probabilidades de transición entre estados, y donde dicha probabilidad depende únicamente del estado inmediatamente anterior. Esta última, es la propiedad que se conoce dentro de los procesos de Markov como la propiedad Markoviana. 
 
-Básicamente un HMM se define como una tupla $\boldsymbol\lambda = ( \textbf{A} , \textbf{B} , \boldsymbol\pi )$, donde:
+La segunda etapa del proceso estocástico definido en los HMM, consiste en la generación de nuevas observaciones a medida que el proceso avanza en el tiempo, la distribución de probabilidad asociada a este evento depende únicamente del estado actual del proceso. Dichas observaciones son las que permiten visualizar el comportamiento del modelo, pues los estados generados a partir de estas observaciones no se pueden conocer, es por esto que es llamado modelo de estados ocultos. En la figura XXX se ilustra el proceso estocástico de dos etapas mencionado anteriormente. (Agregar imagen)
+
+De acuerdo a la literatura, un HMM se define como una tupla $\boldsymbol\lambda = ( \textbf{A} , \textbf{B} , \boldsymbol\pi )$, donde:
 
 \begin{itemize}
+    \item El conjunto $\textbf{\textit{S}} = \lbrace 1,...,M \rbrace$ corresponde al espacio de estados ocultos del modelo, este conjunto es finito y discreto.
 
-\item El conjunto de estados ocultos del modelo está dado por: $\textbf{\textit{S}} = \lbrace 1,...,M \rbrace$
+    \item Las secuencias de estados ocultos se denotan por $S_{1:T} \equiv ( S_{1},...,S_{T} )$, donde $S_{t} \in \textbf{S}$, y corresponde al estado presentado en el tiempo $t$.
 
-\item Una secuencia de estados es denota por: $S_{1:T} \equiv ( S_{1},...,S_{T} )$, donde $S_{t} \in \textbf{S}$ es el estado en el tiempo \textit{t}
+    \item Las probabilidades de transición entre estados ocultos se representan por una matriz \textbf{A}, y está dada por:
+        \begin{equation}
+            \textbf{A} = \lbrace a_{ij} \vert a_{ij} \equiv P \left[S_{t} = j \vert S_{t-1} = i \right] \rbrace
+        \end{equation}
 
-\item La matriz \textbf{A} corresponde a la matriz de probabilidades de transición entre estados ocultos, y está dada por:
-  \begin{equation}
-    \textbf{A} = \lbrace a_{ij} \vert a_{ij} \equiv P \left[S_{t} = j \vert S_{t-1} = i \right] \rbrace
-  \end{equation}
+    \item Las probabilidades iniciales del modelo se representan por un vector $\boldsymbol\pi$, el cual esta dado por: 
+        \begin{equation}
+            \boldsymbol\pi = \lbrace \pi_{j} \vert \pi_{j} \equiv P \left[S_{0} = j \right] \rbrace
+        \end{equation}
+        
+    \item El conjunto $\textbf{V} = \lbrace v_{1}, v_{2},...,v_{K} \rbrace$ corresponde a los valores observados dentro del proceso.
 
-\item El vector $\boldsymbol\pi$ corresponde al vector de probabilidades iniciales del modelo, y está dado por: 
-  \begin{equation}
-    \boldsymbol\pi = \lbrace \pi_{j} \vert \pi_{j} \equiv P \left[S_{0} = j \right] \rbrace
-  \end{equation}
+    \item Las secuencias de observaciones se denotan por $O_{1:T} \equiv ( O_{1}, O_{2}, ..., O_{T} )$, donde $O_{t} \in \textbf{V}$, y corresponde a la observación en el tiempo $t$
 
-\item El conjunto de valores observables es: $\textbf{V} = \lbrace v_{1}, v_{2},...,v_{K} \rbrace$
+    \item La probabilidad de emitir una observación $v_{k}$ mientras se pasa de un estado $i$ a un estado $j$, se denotada por:
+        \begin{equation}
+            b_{ij(v_{k})} \equiv P \left[ v_{k} \vert S_{t-1} = i, S_{t} = j \right]
+        \end{equation}
 
-\item Una secuencia de observaciones es denotada por: $O_{1:T} \equiv ( O_{1}, O_{2}, ..., O_{T} )$, donde $O_{t} \in \textbf{V}$ es la observación en el tiempo \textit{t}
-
-\item La emisión de probabilidad de observar un elemento $v_{k}$ mientras se pasa del estado $i$ al estado $j$, es denotada por:
-  \begin{equation}
-    b_{ij(v_{k})} \equiv P \left[ v_{k} \vert S_{t-1} = i, S_{t} = j \right]
-  \end{equation}
-
-Dado que generalmente se asume que esta probabilidad es independiente al estado anterior [libro guia], se define la matriz \textbf{B} de la siguiente manera:
-  \begin{equation}
-    \textbf{B} = \lbrace b_{j(v_{k})} \equiv P\left[ v_{k} \vert S_{t} = j\right] \rbrace
-  \end{equation}
+    Sin embargo, generalmente se asume que esta probabilidad es independiente al estado anterior \cite{Yu2016}, por lo cual se redefine la matriz \textbf{B} de la siguiente manera:
+        \begin{equation}
+            \textbf{B} = \lbrace b_{j(v_{k})} \equiv P\left[ v_{k} \vert S_{t} = j\right] \rbrace
+        \end{equation}
   
 \end{itemize}
 
-Por otro lado, se define la variable \textit{forward} como la probabilidad conjunta de $S_{t}=j$ y la secuencia parcial observada $o_{1:t}$
-  \begin{equation}
-    \alpha_{t}(j) \equiv P \left[ S_{t} = j, o_{1:t} \vert \boldsymbol\lambda \right]
-  \end{equation}
+\subsubsection{Variables \textit{forward} y \textit{backward}}
 
-Y la variable \textit{backward} como la probabilidad de la futura observaci\'on dado un estado actual.
-  \begin{equation}
-    \beta_{t}(j) \equiv P \left[ o_{t+1:T} \vert S_{t} = j, \boldsymbol\lambda \right]
-  \end{equation}
+Al usar los modelos de estados ocultos de Markov se busca resolver algunos problemas. Por un lado, se busca determinar cual es la probabilidad de que determinado modelo haya generado cierta secuencia de observaciones. Es decir, determinar la probabilidad $P(O_{1:T} | \lambda)$ dado un modelo $\boldsymbol\lambda = ( \textbf{A} , \textbf{B} , \boldsymbol\pi )$. Para esto se define la variable \textit{forward}, la cual corresponde a la probabilidad conjunta de $S_{t}=j$, y la secuencia parcial observada $o_{1:t}$, y esta dada por:
 
-Estas últimas dos son las variables usadas para calcular la probabilidad de que un modelo haya generado una secuencias, y que determinada secuencias pertenezca a un modelo dado.
+    \begin{equation}
+        \alpha_{t}(j) \equiv P \left[ S_{t} = j, o_{1:t} \vert \boldsymbol\lambda \right]
+    \end{equation}
+    
+También, con los modelos HMM se busca encontrar cual es la secuencia de estados ocultos más probable que puede generar determinado modelo, y cierta secuencia de observaciones. Es decir, dado un modelo $\boldsymbol\lambda = ( \textbf{A} , \textbf{B} , \boldsymbol\pi )$, y una secuencia de observaciones $O_{1:T}$, cual es la secuencia de estado $S_{1:T}$ que más probabilidades tiene de ser generada. Esto se soluciona con la variable \textit{backward}, la cual se define como la probabilidad de la futura observación dado un estado actual, y se denota de la siguiente manera:
+
+    \begin{equation}
+        \beta_{t}(j) \equiv P \left[ o_{t+1:T} \vert S_{t} = j, \boldsymbol\lambda \right]
+    \end{equation}
+
+
+\subsubsection{Algoritmo Baum-Welch}
+
+Este algoritmo, también llamado como algoritmo \textit{forward-backward}, es el que permite realizar la estimación de los parámetros de cualquier modelo $\lambda$. Este, es una implementación dinámica del algoritmo de Esperanza y Máximo (EM), el cual a su vez corresponde a una implementación del criterio de máxima verosimilitud \cite{Panuccio2002}. 
+
+Este algoritmo de entrenamiento cuenta con varias condiciones iniciales, las cuales son $\alpha_{0}(j)=\pi_{j}$, y $\beta_{0}(j)=1$ donde $j \in \textbf{S}$. 
+
+A partir de dichas condiciones iniciales, se puede iniciar el calculo de las variables \textit{forward} y \textit{backward} de manera dinámica, como se muestra a continuación \cite{Yu2016}:
+
+    \begin{equation}
+        \alpha_{t}(j) = \sum_{i \in \textbf{S}} \alpha_{t-1}(i) a_{ij} b_{j}(o_{t}), 1 \leq t \leq T, j \in \textbf{S}
+    \end{equation}
+    
+    \begin{equation}
+        \beta_{t}(j) = \sum_{i \in \textbf{S}} a_{ji} b_{j}(o_{t+1}) \beta_{t+1}(j), 0 \leq t \leq T - 1, j \in \textbf{S}
+    \end{equation}
+    
+Una vez son obtenidas las variables \textit{forward} y \textit{backward}, se debe realizar el calculo de la probabilidad posterior $P(S_{t}=i, S_{t+1}=j | \textbf{O}, \lambda)$ de una transición del estado \textit{i} al estado \textit{j} en el tiempo \textit{t}, esta generalmente es denotada por $\gamma_{t,(i,j)}$ \cite{Fink2014}, y se calcula de la siguiente manera:
+
+    \begin{equation}
+        \gamma_{t,(i,j)} = \dfrac{ \alpha_{t}(i) a_{ij} b_{j}(O_{t+1}) \beta_{t+1}(j) }{P(\textbf{O} | \lambda)}
+    \end{equation}
+    
+    \begin{equation}
+        \gamma_{t,(i)} = P(S_{t} = i | \textbf{O}, \lambda) = \sum_{j = 1}^{N} \gamma_{t}(i, j)
+    \end{equation}
+
+Luego de haber obtenido la variable \textit{gamma}, se puede proceder a estimar los parametros del modelo de la siguiente manera:
+
+    \begin{equation}
+        \hat{a}_{ij} = \dfrac{ \sum_{t = 1}^{T-1} \gamma_{t}(i,j) }{ \sum_{t = 1}^{T-1} \gamma_{t}(i) }
+    \end{equation}
+    
+    \begin{equation}
+        \hat{\pi}_{i} = P( S_{1} = i | \textbf{O}, \lambda ) = \gamma_{1}(i)
+    \end{equation}
+    
+    \begin{equation}
+        \hat{b}_{j}(o_{k}) = \dfrac{ \sum_{t:O_{t}=o_{k}} \gamma_{t}(j) }{ \sum_{t = 1}^{T} \gamma_{t}(j) }
+    \end{equation}
+
+Los cálculos descritos anteriormente se deben realizan de manera iterativa, este proceso permitirá obtener siempre un mejor modelo es decir,  $P(\textbf{O} | \hat{\lambda}) \geq P(\textbf{O} | \lambda)$, a partir de esto el criterio de parada puede estar definido por un valor muy pequeño de la diferencia de ambas probabilidades. 
+
 
 \subsection{HSMM (Hidden semi-Markov Model) }
 
-El modelo anterior, no tiene en cuenta el tiempo que los elementos de trabajo consumen en cada uno de los estados del proceso, o lo que es igual, en las secuencias de eventos, lo que limita su capacidad para identificar errores en el proceso asociados a elementos de trabajo que se quedan estancados en un estado del proceso por tiempos fuera de lo normal [13]. Por otro lado, al modelar los sucesos de eventos puede ocurrir que se pierda información en intervalos de tiempo, o pueden existir múltiples secuencias de observaciones que no están sincronizadas entre sí, es decir que los tiempos no corresponden entre ellas, lo que implica que se pueden tener diferentes distribuciones de emisión para la misma secuencia de estados [14]. Ante estos inconvenientes surge una variación de HMM, que permite detectar secuencias específicas a partir del análisis de los sucesos de eventos registrados por el sistema, y tiene en cuenta su tiempo de ocurrencia. Este modelo es el modelo de estados ocultos de semi-Markov (HSMM, Hidden Semi-Markov Model).
+Los modelos HMM presentan una dificulta, pues estos no tienen en cuenta el tiempo que los elementos de trabajo consumen en cada uno de los estados del proceso, o lo que es igual, en las secuencias de eventos, lo que limita su capacidad para identificar errores en el proceso asociados a elementos de trabajo que se quedan estancados en un estado del proceso por tiempos fuera de lo normal \cite{Carrera2015}. Por otro lado, al modelar los sucesos de eventos puede ocurrir que se pierda información en intervalos de tiempo, o pueden existir múltiples secuencias de observaciones que no están sincronizadas entre sí, es decir que los tiempos no corresponden entre ellas, lo que implica que se pueden tener diferentes distribuciones de emisión para la misma secuencia de estados \cite{Yu2003}. Ante estos inconvenientes surge una variación de HMM, que permite detectar secuencias específicas a partir del análisis de los sucesos de eventos registrados por el sistema, y tiene en cuenta su tiempo de ocurrencia. Este modelo es el modelo de estados ocultos de semi-Markov (HSMM, Hidden Semi-Markov Model).
 
-HSMM elimina las distribuciones constantes o geométricas de los tiempos de duración de cada uno de los estados del proceso que generalmente son asumidas en HMM [8]. En HSMM la duración de un estado es explícitamente definida y está dada por una variable aleatoria, lo que quiere decir que la probabilidad de duración de un estado es establecida por una función de distribución, que puede ser una función de densidad de probabilidad continua, tal como una distribución Gaussiana, de Poisson o Gamma [16]. Otra diferencia entre HMM y HSMM es que generalmente en HMM se asume una observación por estado, en cambio en HSMM se puede modelar con mayor precisión si un sólo estado emite una secuencia de observaciones [8,15].
-Figura con el HSMM
+HSMM elimina las distribuciones constantes o geométricas de los tiempos de duración de cada uno de los estados del proceso que generalmente son asumidas en HMM \cite{Yu2006}. En HSMM la duración de un estado es explícitamente definida y está dada por una variable aleatoria, lo que quiere decir que la probabilidad de duración de un estado es establecida por una función de distribución, que puede ser una función de densidad de probabilidad continua, tal como una distribución Gaussiana, de Poisson o Gamma \cite{Marhasev2006}. Otra diferencia entre HMM y HSMM es que generalmente en HMM se asume una observación por estado, en cambio en HSMM se puede modelar con mayor precisión si un sólo estado emite una secuencia de observaciones \cite{Yu2006,Yu2010}. (Agregar figura HSMM)
 
 En HSMM se realizan algunas modificaciones respecto a los parámetros definidos para HMM como se muestra a continuación:
 
 \begin{itemize}
-\item Se define una nueva variable aleatoria, la cual representa la duración que permanece el proceso en determinado estado. El conjunto de estas duraciones se denota de la siguiente manera: $\textbf{D} = \lbrace 1,2,...,D \rbrace$, donde \textit{D} es la máxima duración en un estado.
 
-\item La matriz \textbf{A} se redefine, de tal manera que ahora representa la probabilidad de estar en el estado $i$ y haber durado un tiempo $h$, y pasar al estado $j$ y permanecer en este un tiempo $d$, donde $i \neq j$. 
-  \begin{equation}
-    \textbf{A} = \lbrace a_{(i,h)(j,d)} \vert a_{(i,h)(j,d)} \equiv P \left[ S_{[t+1:t+d]} = j \vert S_{[t-h+1:t]} = i \right] \rbrace
-  \end{equation}
+    \item Se define una nueva variable aleatoria, la cual representa la duración que permanece el proceso en determinado estado. El conjunto de estas duraciones se denota de la siguiente manera: $\textbf{D} = \lbrace 1,2,...,D \rbrace$, donde \textit{D} es la máxima duración en un estado.
 
-\item El vector de probabilidades iniciales $\boldsymbol\pi$ se redefine como:
-  \begin{equation}
-    \boldsymbol\pi = \lbrace \pi_{i,d} \vert \pi_{i,d} \equiv P \left[ S_{[t-d+1:t]} = j \right] \rbrace ; t \leqslant 0
-  \end{equation}
+    \item La matriz \textbf{A} se redefine, de tal manera que ahora representa la probabilidad de estar en el estado $i$ y haber durado un tiempo $h$, y pasar al estado $j$ y permanecer en este un tiempo $d$, donde $i \neq j$. 
+    
+        \begin{equation}
+            \textbf{A} = \lbrace a_{(i,h)(j,d)} \vert a_{(i,h)(j,d)} \equiv P \left[ S_{[t+1:t+d]} = j \vert S_{[t-h+1:t]} = i \right] \rbrace
+        \end{equation}
 
-\item La matriz \textbf{B} se redefine como:
-  \begin{equation}
-    \textbf{B} = \lbrace b_{j,d(o_{t+1:t+d})} \vert b_{j,d(o_{t+1:t+d})} \equiv P \left[ o_{t+1:t+d} \vert S_{[t+1:t+d]} = j \right] \rbrace
-  \end{equation}
+    \item El vector de probabilidades iniciales $\boldsymbol\pi$ se redefine como:
+        \begin{equation}
+            \boldsymbol\pi = \lbrace \pi_{i,d} \vert \pi_{i,d} \equiv P \left[ S_{[t-d+1:t]} = j \right] \rbrace ; t \leqslant 0
+        \end{equation}
+
+    \item La matriz \textbf{B} se redefine como:
+        \begin{equation}
+            \textbf{B} = \lbrace b_{j,d(o_{t+1:t+d})} \vert b_{j,d(o_{t+1:t+d})} \equiv P \left[ o_{t+1:t+d} \vert S_{[t+1:t+d]} = j \right] \rbrace
+    \end{equation}
 
 \end{itemize}
 
@@ -118,33 +164,19 @@ Las variables \textit{forward} y \textit{backward} también presentan modificaci
     \beta_{t}(j,d) \equiv P \left[ o_{t+1:T} \vert S_{[t-d+1:t]} = j, \boldsymbol\lambda \right]
   \end{equation}
 
-Hablar un poco mas de las probabilidades anteriores....
-
-
 \setcounter{secnumdepth}{4}
 \subsubsection{HSMM con duración explicita }
 
-Este modelo asume que una transición de estado es independiente a la duración en el estado anterior, es decir: $a_{(i,h)(j,d)} = a_{(i)(j,d)}$, donde las transiciones al mismo estado $a_{(i)(i,d)} = 0$ no se permitidas. La duración de este estado se asume dependiente del estado actual, e independiente del estado anerior.
-
-Este es uno de los modelos mas sencillos de los HSMM, al igual que uno de los más populares [referencia libro]
-
-No es recomentado usarlo en d grandes [libro]
+Este modelo asume que una transición de estado es independiente a la duración en el estado anterior, es decir: $a_{(i,h)(j,d)} = a_{(i)(j,d)}$, donde las transiciones al mismo estado $a_{(i)(i,d)} = 0$ no se permitidas. La duración de este estado se asume dependiente del estado actual, e independiente del estado anterior. Este es uno de los modelos mas sencillos entre las variaciones existentes para HSMM, al igual que uno de los más populares, adicional a esto no es recomendado usarlo para valores de \textit{d} muy grandes \cite{Yu2016}.
 
 \subsubsection{HSMM con transición variable }
 
-Esta variación del HSMM, modela la dependencia de las probabilidades de transición en la duración de los estados, llamado también como modelo de estados ocultos de semi-Markov no estacionario (NHSMM, Non-stationary Hidden Semi-Markov Model) [16]. Este modelo toma en cuenta no sólo la duración explícita de un estado, sino que también selecciona la transición de acuerdo a la duración exacta, mejorando la precisión del modelo [16]. Se ha demostrado que ante tareas complejas de reconocimiento de patrones NHSMM ha presentado un mejor desempeño que HSMM [16]. En el contexto de la minería de procesos, este compartimiento cobra mucho sentido, debido a que dependiendo del tiempo que dura un ítem de trabajo en un estado específico, se puede inferir que se está presentando un comportamiento anómalo en dicho ítem de trabajo, y que podría finalizar en un estado de error. Sin embargo, NHSMM no ha sido ampliamente utilizado en la minería de procesos debido al alto costo computacional que presenta el entrenamiento del modelo.
+Esta variación del HSMM, modela la dependencia de las probabilidades de transición en la duración de los estados, llamado también como modelo de estados ocultos de semi-Markov no estacionario (NHSMM, Non-stationary Hidden Semi-Markov Model) \cite{Marhasev2006}. Este modelo toma en cuenta no sólo la duración explícita de un estado, sino que también selecciona la transición de acuerdo a la duración exacta, mejorando la precisión del modelo. Se ha demostrado que ante tareas complejas de reconocimiento de patrones NHSMM ha presentado un mejor desempeño que HSMM \cite{Marhasev2006}. En el contexto de la minería de procesos, este compartimiento cobra mucho sentido, debido a que dependiendo del tiempo que dura un ítem de trabajo en un estado específico, se puede inferir que se está presentando un comportamiento anómalo en dicho ítem de trabajo, y que podría finalizar en un estado de error. Sin embargo, NHSMM no ha sido ampliamente utilizado en la minería de procesos debido al alto costo computacional que presenta el entrenamiento del modelo.
 
-Comparado con el modelo anterior, el modelo de transición variable asume que el estado de transición es dependiente sobre la duración del estado, lo cual hacer que see mejor describiendo procesos de estados ocultos de markov no estacionarios [referencia libro]. Lo cual permite modelar procesos homogeneos.
+Comparado con el modelo anterior, el modelo de transición variable asume que el estado de transición es dependiente sobre la duración del estado, lo cual hace que sea mejor describiendo procesos de estados ocultos de Markov no estacionarios, lo cual permite modelar procesos homogéneos \cite{Yu2016}. De acuerdo a los anterior se tiene la que probabilidad de transacción de estados ocultos $a_{(i,h)(j,d)} = a_{(i,h)(j)}$ se redefine como $a_{(i,h)(j,d)} = a_{(i,d)(j,1)}$. (Agregar figura NHSMM)
 
-$a_{(i,h)(j,d)} = a_{(i,h)(j)}$
-$a_{(i,h)(j,d)} = a_{(i,d)(j,1)}$
-
-Figura
-
-
-
-
-\subsection{LJTM}
+\subsection{LSTM}
+(Descripción de modelos LSTM)
 
 
 
@@ -152,15 +184,12 @@ Figura
 \section{Costo computacional de los modelos} %Section - 3.2 
 \label{section3.2}
 
+La principal dificultad que se tienen al trabajar modelos de estados ocultos de Markov es su alto costo computacional, y que este crece exponencialmente al aumentar el numero de secuencias a analizar, al igual que al aumentar los parámetros del modelo. 
 
-La principal dificultad que se tienen al trabajar modelos de estados ocultos de markov es el alto costo computacional, y que este crece exponencialmente al aumentar el numero de secuencias a analizar, al igual que al aumentar los parametros del modelo. 
+Al momento de realizar la implementación de modelos HMM sobre un conjunto de datos dado, se usa el algoritmo \textit{Baum-Welch}, el cual como se mencionó anteriormente corresponde a una implementación del algoritmo de maximización de la esperanza \textit{(expectation-maximization, EM)} para el caso de HMM, y el cual permite realizar el entrenamiento por lotes de los parámetros del modelo por medio de la estimación de máxima verosimilitud. Generalmente EM produce buenos resultados, aunque puede sufrir de problemas de sobreajuste y puede tomar mucho tiempo en converger, particularmente para datos con una dimensionalidad alta \cite{Panuccio2002}. Para un HMM estándar, con secuencias de longitud $T$ y un HMM ergódico con $N$ estados, la complejidad en términos de memoria del algoritmo \textit{Baum-Welch} crece linealmente con $T$ y $N$, obteniendo una complejidad de orden $O(NT)$. Mientras que la complejidad respecto al tiempo crece cuadráticamente con $N$ y linealmente con $T$, lo que implica una complejidad del orden de $O(N^2T)$. Generalmente cuando $T$ es muy grande pueden presentarse inconvenientes a nivel de memoria, debido a que los recursos disponibles para el proceso de entrenamiento del modelo pueden ser excedidos, causando un desbordamiento de memoria en el sistema de archivos en disco \cite{Khreich2010,Yu2010}. Por otro lado, en implementaciones sencillas de HSMM la complejidad en términos de memoria es igual a la de un HMM estándar, sin embargo la complejidad computacional durante el entrenamiento es del orden de $O((N^2 + ND^2 )T )$ , donde $D$ es la máxima cantidad de tiempo que se permanece en un estado \cite{Yu2010}. Finalmente en un NHSMM la complejidad computacional del entrenamiento es del orden de $O (N^2 T D^2 )$ \cite{Marhasev2006}.
 
-Al momento de realizar la implementación de modelos HMM sobre un conjunto de datos dado, se usa el algoritmo Baum-Welch (BW), el cual corresponde a una implementación del algoritmo de maximización de la esperanza (expectation-maximization EM) para el caso de HMM, y el cual permite realizar el entrenamiento por lotes de los parámetros del modelo por medio de la estimación de máxima verosimilitud. Para un HMM estándar, con secuencias de longitud $T$ y un HMM ergódico con $N$ estados, la complejidad en términos de memoria del algoritmo BW crece linealmente con $T$ y $N$, obteniendo una complejidad de orden $O(NT)$. Mientras que la complejidad respecto al tiempo crece cuadráticamente con $N$ y linealmente con $T$, lo que implica una complejidad del orden de $O(N^2T)$. Generalmente cuando $T$ es muy grande pueden presentarse inconvenientes a nivel de memoria, debido a que los recursos disponibles para el proceso de entrenamiento del modelo pueden ser excedidos, causando un desbordamiento de memoria en el sistema de archivos en disco \cite{Khreich2010,Yu2010}.
+Teniendo en cuenta la complejidad computacional de los modelos HMM y sus modificaciones, el uso de dichos modelos para resolución de problemas en el mundo real se ve limitado a la cantidad de información que es necesario procesar. Por dicha razón se han propuesto algunas alternativas que intentan reducir la complejidad computacional de los algoritmos de entrenamiento \cite{Yu2003,Shun-ZhengYu2003}. Otras propuestas intentan abordar dicho problema de manera paralela y/o distribuida, ya sea modificando los algoritmos de entrenamiento \cite{Turin1998,Li2008}, o haciendo uso de herramientas especializadas en el procesamiento de información por medio de sistemas distribuidos \cite{Shun-ZhengYuZhenLiuMarkSSquillanteCathyXia}. También existen propuestas que incluyen la implementación de componentes de hardware \cite{Maurer2014,Yoshizawa2006}.
 
-El algoritmo de entrenamiento de los HMM, conocido como Baum-Welch (o Forward-Backward), es una implementación dinámica del algoritmo de Esperanza y Maximización (EM), el cual a su vez corresponde a una implementación del criterio de máxima verosimilitud. Generalmente EM produce buenos resultados, aunque puede sufrir de problemas de sobreajuste y puede tomar mucho tiempo en converger, particularmente para datos con una dimensionalidad alta [26]. Para un HMM estándar, con secuencias de longitud T y con N estados ocultos, la complejidad en términos de memoria del algoritmo BW crece linealmente con T y N, obteniendo una complejidad del orden O(N T ) , mientras que la complejidad respecto al tiempo crece cuadráticamente con N y linealmente con T, lo que implica una complejidad del orden de O (N 2 T ) . Estas medidas se ven fuertemente afectadas para los modelos dependientes del tiempo [9]. En una implementación sencilla de HSMM la complejidad en términos de memoria es igual a la de un HMM estándar, sin embargo la complejidad computacional durante el entrenamiento es del orden de O((N 2 + N D 2 )T ) , donde D es la máxima cantidad de tiempo que se permanece en un estado [15]. Finalmente en un NHSMM la complejidad computacional del entrenamiento es del orden de O (N 2 T D 2 ) [16].
-
-Teniendo en cuenta la complejidad computacional de los modelos HMM y sus modificaciones, el uso de dichos modelos para resolución de problemas en el mundo real se ve limitado a la cantidad de información que es necesario procesar. Por dicha razón se han propuesto algunas alternativas que intentan reducir la complejidad computacional de los algoritmos de entrenamiento [14,31]. Otras propuestas intentan abordar dicho problema de manera paralela y/o distribuida, ya sea modificando los algoritmos de entrenamiento [47,48], o haciendo uso de herramientas especializadas en el procesamiento de información por medio de sistemas distribuidos [30]. También existen propuestas que incluyen la implementación de componentes de hardware [17,43].
-
-Una novedosa técnica de procesamiento paralelo, y que ha tenido una gran acogida es MapReduce. Esta técnica fue desarrollada por Google, y es orientada particularmente a los problemas que involucran el procesamiento de grandes cantidades de datos [25]. Los modelos HMM pueden ser implementados bajo el paradigma de MapReduce, sinembargo es necesario ajustar los modelos a este paradigma. Por ejemplo, en [29] se muestra la aplicación de MapReduce en HSMM, donde la implementación de este modelo es realizada sobre Spark, una plataforma ampliamente usada en el contexto de Big Data.
+Una novedosa técnica de procesamiento paralelo, y que ha tenido una gran acogida es MapReduce. Esta técnica fue desarrollada por Google, y es orientada particularmente a los problemas que involucran el procesamiento de grandes cantidades de datos \cite{Li1999}. Los modelos HMM pueden ser implementados bajo el paradigma de MapReduce, sinembargo es necesario ajustar los modelos a este paradigma. Por ejemplo, en \cite{Hongeng2003} se muestra la aplicación de MapReduce en HSMM, donde la implementación de este modelo es realizada sobre Spark, una plataforma ampliamente usada en el contexto de Big Data.
 
 Para el caso de los modelos NHSMM, al momento en que se realiza esta revisión, no se encuentran alternativas publicadas para la reducción de los tiempos de entrenamiento, razón por la cual aunque su capacidad de modelado es mayor que la de los modelos HMM y HSMM, como se indicó anteriormente, su uso en el contexto de la minería de procesos aún no ha sido explorado.

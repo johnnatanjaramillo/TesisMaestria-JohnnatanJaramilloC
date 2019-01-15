@@ -258,9 +258,9 @@ supported!}
 % Add appendices
 \RequirePackage[title,titletoc]{appendix}
 
-\renewcommand{\contentsname}{Table of contents}
-\renewcommand{\listfigurename}{List of figures}
-\renewcommand{\listtablename}{List of tables}
+\renewcommand{\contentsname}{Tabla de contenido}
+\renewcommand{\listfigurename}{Lista de figuras}
+\renewcommand{\listtablename}{Lista de tablas}
 
 % Hides Contents appearing from TOC, but adds it to bookmarks
 \let\temptableofcontents\tableofcontents
@@ -801,7 +801,7 @@ wish to left align your text}
 \renewcommand{\cleardoublepage}{\clearpage\if@twoside \ifodd\c@page\else%
 	\hbox{}%
 	\thispagestyle{empty}  % Empty header styles
-	\newpage%
+	%\newpage%
 	\if@twocolumn\hbox{}\newpage\fi\fi\fi}
 
 
@@ -1011,7 +1011,7 @@ wish to left align your text}
 \newenvironment{acknowledgements}{
 \cleardoublepage
 \setsinglecolumn
-\chapter*{\centering \Large Acknowledgements}
+\chapter*{\centering \Large Agradecimientos}
 \thispagestyle{empty}
 }
 
@@ -1076,6 +1076,7 @@ wish to left align your text}
     \renewcommand{\printthesisindex}{}
 \else
     \defineChapterfalse
+    \renewcommand{\chaptername}{Capítulo}
 \fi
 
 % ******************************** Abstract ************************************
@@ -1110,7 +1111,7 @@ wish to left align your text}
   \end{center}
 \else
 % Normal abstract in the thesis
-  \cleardoublepage
+  %\cleardoublepage
   \setsinglecolumn
   \chapter*{\centering \Large Abstract}
   \thispagestyle{empty}
